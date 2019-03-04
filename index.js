@@ -8,7 +8,7 @@ const realIsomorphicFetch = require('real-isomorphic-fetch');
 const textVersionJs = require('textversionjs');
 const htmlEntities = require('html-entities').AllHtmlEntities;
 
-const rootDir = '/Volumes/Data/jiegec/learn.tsinghua';
+const rootDir = 'D:/Seafile/SYNC/learn.tsinghua';
 
 let helper = new thuLearnLib.Learn2018Helper();
 
@@ -41,22 +41,26 @@ function getAndEnsureSaveFileDir(semester, course) {
     let semesterType = semester.type;
     let name = `${course.name}(${course.courseIndex})`;
     try {
-        fs.mkdirSync(`${rootDir}/${year}`);
+        fs.mkdirSync(`${rootDir}/${year} ${semesterType}`);
     } catch (e) {
     }
     try {
-        fs.mkdirSync(`${rootDir}/${year}/${semesterType}`);
+        fs.mkdirSync(`${rootDir}/${year} ${semesterType}/${name}`);
     } catch (e) {
     }
     try {
-        fs.mkdirSync(`${rootDir}/${year}/${semesterType}/${name}`);
+        fs.mkdirSync(`${rootDir}/${year} ${semesterType}/${name}/notifications`);
     } catch (e) {
     }
-    return `${rootDir}/${year}/${semesterType}/${name}`;
+    try {
+        fs.mkdirSync(`${rootDir}/${year} ${semesterType}/${name}/homeworks`);
+    } catch (e) {
+    }
+    return `${rootDir}/${year} ${semesterType}/${name}`;
 }
 
 function cleanFileName(fileName) {
-    return fileName.replace(/\//gi, '_').trim();
+    return fileName.replace(/\//gi, '_').replace(/:/gi, '_').trim();
 }
 
 let tasks = [];
@@ -71,12 +75,12 @@ async function callback(semester, course, documents, cookies) {
     }
 
     for (let document of documents) {
-        if (Date.now() - new Date(document.uploadTime).getTime() >
-            1000 * 60 * 60 * 24 * 14) {
-            current++;
-            console.log(`${current}/${all}: Too old skipped: ${document.title}`);
-            continue;
-        }
+        // if (Date.now() - new Date(document.uploadTime).getTime() >
+        //     1000 * 60 * 60 * 24 * 14) {
+        //     current++;
+        //     console.log(`${current}/${all}: Too old skipped: ${document.title}`);
+        //     continue;
+        // }
 
         let title = cleanFileName(document.title);
 
@@ -133,62 +137,65 @@ async function callback(semester, course, documents, cookies) {
 (async () => {
     await helper.login(process.argv[2], process.argv[3]);
     const semesters = await helper.getSemesterIdList();
+	// console.log(semesters);
     for (let semesterId of semesters) {
-        let semester = {
-            id: semesterId,
-            startYear: Number(semesterId.slice(0, 4)),
-            endYear: Number(semesterId.slice(5, 9)),
-            type: thuLearnLibUtil.parseSemesterType(Number(semesterId.slice(10, 11)))
-        };
-        const courses = await helper.getCourseList(semester.id);
-        for (let course of courses) {
-            const files = await helper.getFileList(course.id);
-            await callback(semester, course, files, {});
-            const notifications = await helper.getNotificationList(course.id);
-            all += notifications.length;
-            let dir = getAndEnsureSaveFileDir(semester, course);
-            for (let notification of notifications) {
-                let title = cleanFileName(notification.title);
-                let file = `${dir}/${title}.txt`;
-                fs.writeFileSync(file, textVersionJs(notification.content));
-                current ++;
-                console.log(`${current}/${all}: ${course.name}/${title}.txt Saved`);
-            }
-            const homeworks = await helper.getHomeworkList(course.id);
-            all += homeworks.length;
-            for (let homework of homeworks) {
-                let title = cleanFileName(htmlEntities.decode(homework.title));
-                let file = `${dir}/${title}.txt`;
-                let content = '';
-                if (homework.description !== undefined) {
-                    content += `说明： ${textVersionJs(homework.description)}\n`;
+        if (semesterId === '2018-2019-2') {
+            let semester = {
+                id: semesterId,
+                startYear: Number(semesterId.slice(0, 4)),
+                endYear: Number(semesterId.slice(5, 9)),
+                type: thuLearnLibUtil.parseSemesterType(Number(semesterId.slice(10, 11)))
+            };
+            const courses = await helper.getCourseList(semester.id);
+            for (let course of courses) {
+                const files = await helper.getFileList(course.id);
+                await callback(semester, course, files, {});
+                const notifications = await helper.getNotificationList(course.id);
+                all += notifications.length;
+                let dir = getAndEnsureSaveFileDir(semester, course);
+                for (let notification of notifications) {
+                    let title = cleanFileName(notification.title);
+                    let file = `${dir}/notifications/${title}.txt`;
+                    fs.writeFileSync(file, textVersionJs(notification.content));
+                    current ++;
+                    console.log(`${current}/${all}: ${course.name}/${title}.txt Saved`);
                 }
-                if (homework.grade !== undefined) {
-                    content += `分数： ${homework.grade} by ${homework.graderName}\n`;
-                }
-                if (homework.gradeContent !== undefined) {
-                    content += `评语： ${homework.gradeContent}\n`;
-                }
-                fs.writeFileSync(file, content);
-                current ++;
-                console.log(`${current}/${all}: ${course.name}/${title}.txt Saved`);
-                if (homework.submitted && homework.submittedAttachmentUrl && homework.submittedAttachmentName) {
-                    let attachmentName = cleanFileName(homework.submittedAttachmentName);
-                    all ++;
-                    let fileName = `${dir}/${title}-${attachmentName}`;
-                    tasks.push((async () => {
-                        let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
-                        let result = await fetch(homework.submittedAttachmentUrl);
-                        let fileStream = fs.createWriteStream(fileName);
-                        result.body.pipe(fileStream);
-                        await new Promise((resolve => {
-                            fileStream.on('end', () => {
-                                current++;
-                                console.log(`${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded`);
-                                resolve();
-                            });
-                        }));
-                    })());
+                const homeworks = await helper.getHomeworkList(course.id);
+                all += homeworks.length;
+                for (let homework of homeworks) {
+                    let title = cleanFileName(htmlEntities.decode(homework.title));
+                    let file = `${dir}/homeworks/${title}.txt`;
+                    let content = '';
+                    if (homework.description !== undefined) {
+                        content += `说明： ${textVersionJs(homework.description)}\n`;
+                    }
+                    if (homework.grade !== undefined) {
+                        content += `分数： ${homework.grade} by ${homework.graderName}\n`;
+                    }
+                    if (homework.gradeContent !== undefined) {
+                        content += `评语： ${homework.gradeContent}\n`;
+                    }
+                    fs.writeFileSync(file, content);
+                    current ++;
+                    console.log(`${current}/${all}: ${course.name}/${title}.txt Saved`);
+                    if (homework.submitted && homework.submittedAttachmentUrl && homework.submittedAttachmentName) {
+                        let attachmentName = cleanFileName(homework.submittedAttachmentName);
+                        all ++;
+                        let fileName = `${dir}/homeworks/${title}-${attachmentName}`;
+                        tasks.push((async () => {
+                            let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
+                            let result = await fetch(homework.submittedAttachmentUrl);
+                            let fileStream = fs.createWriteStream(fileName);
+                            result.body.pipe(fileStream);
+                            await new Promise((resolve => {
+                                fileStream.on('end', () => {
+                                    current++;
+                                    console.log(`${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded`);
+                                    resolve();
+                                });
+                            }));
+                        })());
+                    }
                 }
             }
         }
