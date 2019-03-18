@@ -60,7 +60,7 @@ function getAndEnsureSaveFileDir(semester, course) {
 }
 
 function cleanFileName(fileName) {
-    return fileName.replace(/\//gi, '_').replace(/:/gi, '_').trim();
+    return fileName.replace(/[\/\\:\*\?\"\<\>\|]/gi, '_').trim();
 }
 
 let tasks = [];
@@ -124,7 +124,7 @@ async function callback(semester, course, documents, cookies) {
             let fileStream = fs.createWriteStream(fileName);
             result.body.pipe(fileStream);
             await new Promise((resolve => {
-                fileStream.on('end', () => {
+                fileStream.on('finish', () => {
                     current++;
                     console.log(`${current}/${all}: ${course.name}/${document.title}.${document.fileType} Downloaded`);
                     resolve();
@@ -169,7 +169,7 @@ async function callback(semester, course, documents, cookies) {
                             let fileStream = fs.createWriteStream(fileName);
                             result.body.pipe(fileStream);
                             await new Promise((resolve => {
-                                fileStream.on('end', () => {
+                                fileStream.on('finish', () => {
                                     current++;
                                     console.log(`${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded`);
                                     resolve();
@@ -206,7 +206,7 @@ async function callback(semester, course, documents, cookies) {
                             let fileStream = fs.createWriteStream(fileName);
                             result.body.pipe(fileStream);
                             await new Promise((resolve => {
-                                fileStream.on('end', () => {
+                                fileStream.on('finish', () => {
                                     current++;
                                     console.log(`${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded`);
                                     resolve();
