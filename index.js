@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const process = require('process');
 const _ = require('lodash');
 const thuLearnLib = require('thu-learn-lib');
@@ -60,7 +60,7 @@ function getAndEnsureSaveFileDir(semester, course) {
 }
 
 function cleanFileName(fileName) {
-    return fileName.replace(/[\/\\:\*\?\"\<\>\|]/gi, '_').trim();
+    return fileName.replace(/[\/\\:\*\?\"\<\>\|\xbb]|[\x00-\x1F]/gi, '_').trim();
 }
 
 let tasks = [];
@@ -139,7 +139,7 @@ async function callback(semester, course, documents, cookies) {
     const semesters = await helper.getSemesterIdList();
 	// console.log(semesters);
     for (let semesterId of semesters) {
-        if (semesterId === '2018-2019-2') {
+        if (semesterId === '2019-2020-1') {
             let semester = {
                 id: semesterId,
                 startYear: Number(semesterId.slice(0, 4)),
