@@ -60,7 +60,7 @@ function getAndEnsureSaveFileDir(semester, course) {
 }
 
 function cleanFileName(fileName) {
-    return fileName.replace(/[\/\\:\*\?\"\<\>\|\xbb]|[\x00-\x1F]/gi, '_').trim();
+    return fileName.replace(/[\/\\:\*\?\"\<\>\|]|[\x00-\x1F]/gi, '_').trim();
 }
 
 let tasks = [];
