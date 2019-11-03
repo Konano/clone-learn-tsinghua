@@ -250,6 +250,30 @@ async function callback(semester, course, documents, cookies) {
                             }));
                         })());
                     }
+                    if (homework.submitted && homework.gradeAttachmentUrl && homework.gradeAttachmentName) {
+                        let attachmentName = cleanFileName(homework.gradeAttachmentName);
+                        all ++;
+                        if (Date.now() - new Date(homework.deadline).getTime() >
+                            1000 * 60 * 60 * 24 * 14) {
+                            current++;
+                            console.log(`${current}/${all}: Too old skipped: ${title}-${attachmentName}`);
+                            continue;
+                        }
+                        let fileName = `${dir}/homeworks/${title}-${attachmentName}`;
+                        tasks.push((async () => {
+                            let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
+                            let result = await fetch(homework.gradeAttachmentUrl);
+                            let fileStream = fs.createWriteStream(fileName);
+                            result.body.pipe(fileStream);
+                            await new Promise((resolve => {
+                                fileStream.on('finish', () => {
+                                    current++;
+                                    console.log(`${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded`);
+                                    resolve();
+                                });
+                            }));
+                        })());
+                    }
                 }
             }
         }
