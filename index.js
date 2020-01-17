@@ -188,53 +188,30 @@ async function callback(semester, course, documents, cookies) {
                 all += homeworks.length;
                 for (let homework of homeworks) {
                     let title = cleanFileName(htmlEntities.decode(homework.title));
-                    let file = `${dir}/homeworks/${title}.txt`;
-                    let content = '';
-                    if (homework.description !== undefined) {
-                        content += `说明： ${textVersionJs(homework.description)}\n`;
-                    }
-                    if (homework.grade !== undefined) {
-                        content += `分数： ${homework.grade} by ${homework.graderName}\n`;
-                    }
-                    if (homework.gradeContent !== undefined) {
-                        content += `评语： ${homework.gradeContent}\n`;
-                    }
-                    fs.writeFileSync(file, content);
-                    current ++;
-                    console.log(`${current}/${all}: ${course.name}/${title}.txt Saved`);
-                    if (homework.submitted && homework.submittedAttachmentUrl && homework.submittedAttachmentName) {
-                        let attachmentName = cleanFileName(homework.submittedAttachmentName);
-                        all ++;
-                        if (Date.now() - new Date(homework.deadline).getTime() >
-                            1000 * 60 * 60 * 24 * 14) {
-                            current++;
-                            console.log(`${current}/${all}: Too old skipped: ${title}-${attachmentName}`);
-                            continue;
+                    if (Date.now() - new Date(homework.deadline).getTime() >
+                        1000 * 60 * 60 * 24 * 14) {
+                        current++;
+                        console.log(`${current}/${all}: Too old skipped: ${title}`);
+                        continue;
+                    } else {
+                        let file = `${dir}/homeworks/${title}.txt`;
+                        let content = '';
+                        if (homework.description !== undefined) {
+                            content += `说明： ${textVersionJs(homework.description)}\n`;
                         }
-                        let fileName = `${dir}/homeworks/${title}-${attachmentName}`;
-                        tasks.push((async () => {
-                            let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
-                            let result = await fetch(homework.submittedAttachmentUrl);
-                            let fileStream = fs.createWriteStream(fileName);
-                            result.body.pipe(fileStream);
-                            await new Promise((resolve => {
-                                fileStream.on('finish', () => {
-                                    current++;
-                                    console.log(`${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded`);
-                                    resolve();
-                                });
-                            }));
-                        })());
+                        if (homework.grade !== undefined) {
+                            content += `分数： ${homework.grade} by ${homework.graderName}\n`;
+                        }
+                        if (homework.gradeContent !== undefined) {
+                            content += `评语： ${homework.gradeContent}\n`;
+                        }
+                        fs.writeFileSync(file, content);
+                        current ++;
+                        console.log(`${current}/${all}: ${course.name}/${title}.txt Saved`);
                     }
                     if (homework.attachmentUrl && homework.attachmentName) {
                         let attachmentName = cleanFileName(homework.attachmentName);
                         all ++;
-                        if (Date.now() - new Date(homework.deadline).getTime() >
-                            1000 * 60 * 60 * 24 * 14) {
-                            current++;
-                            console.log(`${current}/${all}: Too old skipped: ${title}-${attachmentName}`);
-                            continue;
-                        }
                         let fileName = `${dir}/homeworks/${title}-${attachmentName}`;
                         tasks.push((async () => {
                             let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
@@ -250,16 +227,28 @@ async function callback(semester, course, documents, cookies) {
                             }));
                         })());
                     }
+                    if (homework.submitted && homework.submittedAttachmentUrl && homework.submittedAttachmentName) {
+                        let attachmentName = cleanFileName(homework.submittedAttachmentName);
+                        all ++;
+                        let fileName = `${dir}/homeworks/${title}-submitted-${homework.submittedAttachmentName}`;
+                        tasks.push((async () => {
+                            let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
+                            let result = await fetch(homework.submittedAttachmentUrl);
+                            let fileStream = fs.createWriteStream(fileName);
+                            result.body.pipe(fileStream);
+                            await new Promise((resolve => {
+                                fileStream.on('finish', () => {
+                                    current++;
+                                    console.log(`${current}/${all}: ${course.name}/${title}-submitted-${homework.submittedAttachmentName} Downloaded`);
+                                    resolve();
+                                });
+                            }));
+                        })());
+                    }
                     if (homework.submitted && homework.gradeAttachmentUrl && homework.gradeAttachmentName) {
                         let attachmentName = cleanFileName(homework.gradeAttachmentName);
                         all ++;
-                        if (Date.now() - new Date(homework.deadline).getTime() >
-                            1000 * 60 * 60 * 24 * 14) {
-                            current++;
-                            console.log(`${current}/${all}: Too old skipped: ${title}-${attachmentName}`);
-                            continue;
-                        }
-                        let fileName = `${dir}/homeworks/${title}-${attachmentName}`;
+                        let fileName = `${dir}/homeworks/${title}-graded-${homework.gradeAttachmentName}`;
                         tasks.push((async () => {
                             let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
                             let result = await fetch(homework.gradeAttachmentUrl);
@@ -268,7 +257,7 @@ async function callback(semester, course, documents, cookies) {
                             await new Promise((resolve => {
                                 fileStream.on('finish', () => {
                                     current++;
-                                    console.log(`${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded`);
+                                    console.log(`${current}/${all}: ${course.name}/${title}-graded-${homework.gradeAttachmentName} Downloaded`);
                                     resolve();
                                 });
                             }));
