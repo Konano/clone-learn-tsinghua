@@ -7,8 +7,10 @@ const crossFetch = require('cross-fetch');
 const realIsomorphicFetch = require('real-isomorphic-fetch');
 const textVersionJs = require('textversionjs');
 const htmlEntities = require('html-entities').AllHtmlEntities;
+const color = require('./color');
 
 const rootDir = 'D:/Seafile/SYNC/learn.tsinghua';
+const semester = '2019-2020-2';
 
 let helper = new thuLearnLib.Learn2018Helper();
 
@@ -68,7 +70,7 @@ let tasks = [];
 async function callback(semester, course, documents, cookies) {
     documents = _.uniqBy(documents, 'title');
     all += documents.length;
-    if (documents.length > 70) {
+    if (documents.length > 100) {
         current += documents.length;
         console.log(`${current}/${all}: Too many files skipped: ${course.name}`);
         return;
@@ -95,7 +97,7 @@ async function callback(semester, course, documents, cookies) {
                 console.log(`${current}/${all}: Already downloaded skipped: ${document.title}`);
                 continue;
             } else {
-                console.log(`${document.title} Size mismatch: ` + document.size + ' vs ' + stats.size);
+                console.log(`${color.FgMagenta}${document.title} Size mismatch: ` + document.size + ' vs ' + stats.size + `${color.Reset}`);
             }
         } catch (e) {
 
@@ -108,12 +110,12 @@ async function callback(semester, course, documents, cookies) {
                 (document.size[document.size.length - 1] === 'B' &&
                     Number(document.size.substring(0, document.size.length - 1)) > 1024 * 1024 * 100)) {
                 current++;
-                console.log(`${current}/${all}: Too large skipped: ${document.title}`);
+                console.log(`${color.FgRed}${current}/${all}: Too large skipped (${document.size}): ${document.title}${color.Reset}`);
                 continue;
             }
         } else if (document.size > 1024 * 1024 * 100) {
             current++;
-            console.log(`${current}/${all}: Too large skipped: ${document.title}`);
+            console.log(`${color.FgRed}${current}/${all}: Too large skipped (${document.size}): ${document.title}${color.Reset}`);
             continue;
         }
 
@@ -126,7 +128,7 @@ async function callback(semester, course, documents, cookies) {
             await new Promise((resolve => {
                 fileStream.on('finish', () => {
                     current++;
-                    console.log(`${current}/${all}: ${course.name}/${document.title}.${document.fileType} Downloaded`);
+                    console.log(`${color.FgGreen}${current}/${all}: ${course.name}/${document.title}.${document.fileType} Downloaded${color.Reset}`);
                     resolve();
                 });
             }));
@@ -139,7 +141,7 @@ async function callback(semester, course, documents, cookies) {
     const semesters = await helper.getSemesterIdList();
 	// console.log(semesters);
     for (let semesterId of semesters) {
-        if (semesterId === '2019-2020-1') {
+        if (semesterId === semester) {
             let semester = {
                 id: semesterId,
                 startYear: Number(semesterId.slice(0, 4)),
@@ -168,7 +170,12 @@ async function callback(semester, course, documents, cookies) {
                             console.log(`${current}/${all}: Too old skipped: ${title}-${attachmentName}`);
                             continue;
                         }
-                        let fileName = `${dir}/notifications/${title}-${attachmentName}`;
+                        let fileName = `${dir}/notifications/${title}-${attachmentName}-${notification.attachmentUrl.substr(-6)}`;
+                        if (fs.existsSync(fileName)) {
+                            current++;
+                            console.log(`${current}/${all}: Already downloaded skipped: ${title}-${attachmentName}`);
+                            continue;
+                        }
                         tasks.push((async () => {
                             let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
                             let result = await fetch(notification.attachmentUrl);
@@ -212,7 +219,12 @@ async function callback(semester, course, documents, cookies) {
                     if (homework.attachmentUrl && homework.attachmentName) {
                         let attachmentName = cleanFileName(homework.attachmentName);
                         all ++;
-                        let fileName = `${dir}/homeworks/${title}-${attachmentName}`;
+                        let fileName = `${dir}/homeworks/${title}-${attachmentName}-${homework.attachmentUrl.substr(-6)}`;
+                        if (fs.existsSync(fileName)) {
+                            current++;
+                            console.log(`${current}/${all}: Already downloaded skipped: ${title}-${attachmentName}`);
+                            continue;
+                        }
                         tasks.push((async () => {
                             let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
                             let result = await fetch(homework.attachmentUrl);
@@ -230,7 +242,12 @@ async function callback(semester, course, documents, cookies) {
                     if (homework.submitted && homework.submittedAttachmentUrl && homework.submittedAttachmentName) {
                         let attachmentName = cleanFileName(homework.submittedAttachmentName);
                         all ++;
-                        let fileName = `${dir}/homeworks/${title}-submitted-${homework.submittedAttachmentName}`;
+                        let fileName = `${dir}/homeworks/${title}-submitted-${homework.submittedAttachmentName}-${homework.submittedAttachmentUrl.substr(-6)}`;
+                        if (fs.existsSync(fileName)) {
+                            current++;
+                            console.log(`${current}/${all}: Already downloaded skipped: ${title}-submitted-${homework.submittedAttachmentName}`);
+                            continue;
+                        }
                         tasks.push((async () => {
                             let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
                             let result = await fetch(homework.submittedAttachmentUrl);
@@ -248,7 +265,12 @@ async function callback(semester, course, documents, cookies) {
                     if (homework.submitted && homework.gradeAttachmentUrl && homework.gradeAttachmentName) {
                         let attachmentName = cleanFileName(homework.gradeAttachmentName);
                         all ++;
-                        let fileName = `${dir}/homeworks/${title}-graded-${homework.gradeAttachmentName}`;
+                        let fileName = `${dir}/homeworks/${title}-graded-${homework.gradeAttachmentName}-${homework.gradeAttachmentUrl.substr(-6)}`;
+                        if (fs.existsSync(fileName)) {
+                            current++;
+                            console.log(`${current}/${all}: Already downloaded skipped: ${title}-submitted-${homework.gradeAttachmentName}`);
+                            continue;
+                        }
                         tasks.push((async () => {
                             let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
                             let result = await fetch(homework.gradeAttachmentUrl);
