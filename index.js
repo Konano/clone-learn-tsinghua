@@ -1,6 +1,6 @@
 ﻿const fs = require('fs');
 const process = require('process');
-const _ = require('lodash');
+// const _ = require('lodash');
 const thuLearnLib = require('thu-learn-lib');
 const thuLearnLibUtil = require('thu-learn-lib/lib/utils');
 const crossFetch = require('cross-fetch');
@@ -68,7 +68,7 @@ function cleanFileName(fileName) {
 let tasks = [];
 
 async function callback(semester, course, documents, cookies) {
-    documents = _.uniqBy(documents, 'title');
+    // documents = _.uniqBy(documents, 'title');
     all += documents.length;
     if (documents.length > 100) {
         current += documents.length;
@@ -83,7 +83,6 @@ async function callback(semester, course, documents, cookies) {
         //     console.log(`${current}/${all}: Too old skipped: ${document.title}`);
         //     continue;
         // }
-
         let title = cleanFileName(document.title);
 
         let dir = getAndEnsureSaveFileDir(semester, course);
@@ -136,6 +135,15 @@ async function callback(semester, course, documents, cookies) {
     }
 }
 
+function addHashTag(fileName, hash) {
+    let cut = fileName.lastIndexOf('.');
+    if (cut > -1) {
+        return fileName.substr(0, cut) + '_' + hash + '.' + fileName.substr(cut + 1);
+    } else {
+        return fileName + '_' + hash;
+    }
+}
+
 (async () => {
     await helper.login(process.argv[2], process.argv[3]);
     const semesters = await helper.getSemesterIdList();
@@ -170,7 +178,7 @@ async function callback(semester, course, documents, cookies) {
                             console.log(`${current}/${all}: Too old skipped: ${title}-${attachmentName}`);
                             continue;
                         }
-                        let fileName = `${dir}/notifications/${title}-${attachmentName}-${notification.attachmentUrl.substr(-6)}`;
+                        let fileName = addHashTag(`${dir}/notifications/${title}-${attachmentName}`, notification.attachmentUrl.substr(-6));
                         if (fs.existsSync(fileName)) {
                             current++;
                             console.log(`${current}/${all}: Already downloaded skipped: ${title}-${attachmentName}`);
@@ -184,7 +192,7 @@ async function callback(semester, course, documents, cookies) {
                             await new Promise((resolve => {
                                 fileStream.on('finish', () => {
                                     current++;
-                                    console.log(`${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded`);
+                                    console.log(`${color.FgGreen}${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded${color.Reset}`);
                                     resolve();
                                 });
                             }));
@@ -219,7 +227,7 @@ async function callback(semester, course, documents, cookies) {
                     if (homework.attachmentUrl && homework.attachmentName) {
                         let attachmentName = cleanFileName(homework.attachmentName);
                         all ++;
-                        let fileName = `${dir}/homeworks/${title}-${attachmentName}-${homework.attachmentUrl.substr(-6)}`;
+                        let fileName = addHashTag(`${dir}/homeworks/${title}-${attachmentName}`, homework.attachmentUrl.substr(-6));
                         if (fs.existsSync(fileName)) {
                             current++;
                             console.log(`${current}/${all}: Already downloaded skipped: ${title}-${attachmentName}`);
@@ -233,7 +241,7 @@ async function callback(semester, course, documents, cookies) {
                             await new Promise((resolve => {
                                 fileStream.on('finish', () => {
                                     current++;
-                                    console.log(`${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded`);
+                                    console.log(`${color.FgGreen}${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded${color.Reset}`);
                                     resolve();
                                 });
                             }));
@@ -242,7 +250,7 @@ async function callback(semester, course, documents, cookies) {
                     if (homework.submitted && homework.submittedAttachmentUrl && homework.submittedAttachmentName) {
                         let attachmentName = cleanFileName(homework.submittedAttachmentName);
                         all ++;
-                        let fileName = `${dir}/homeworks/${title}-submitted-${homework.submittedAttachmentName}-${homework.submittedAttachmentUrl.substr(-6)}`;
+                        let fileName = addHashTag(`${dir}/homeworks/${title}-submitted-${homework.submittedAttachmentName}`, homework.submittedAttachmentUrl.substr(-6));
                         if (fs.existsSync(fileName)) {
                             current++;
                             console.log(`${current}/${all}: Already downloaded skipped: ${title}-submitted-${homework.submittedAttachmentName}`);
@@ -256,7 +264,7 @@ async function callback(semester, course, documents, cookies) {
                             await new Promise((resolve => {
                                 fileStream.on('finish', () => {
                                     current++;
-                                    console.log(`${current}/${all}: ${course.name}/${title}-submitted-${homework.submittedAttachmentName} Downloaded`);
+                                    console.log(`${color.FgGreen}${current}/${all}: ${course.name}/${title}-submitted-${homework.submittedAttachmentName} Downloaded${color.Reset}`);
                                     resolve();
                                 });
                             }));
@@ -265,7 +273,7 @@ async function callback(semester, course, documents, cookies) {
                     if (homework.submitted && homework.gradeAttachmentUrl && homework.gradeAttachmentName) {
                         let attachmentName = cleanFileName(homework.gradeAttachmentName);
                         all ++;
-                        let fileName = `${dir}/homeworks/${title}-graded-${homework.gradeAttachmentName}-${homework.gradeAttachmentUrl.substr(-6)}`;
+                        let fileName = addHashTag(`${dir}/homeworks/${title}-graded-${homework.gradeAttachmentName}`, homework.gradeAttachmentUrl.substr(-6));
                         if (fs.existsSync(fileName)) {
                             current++;
                             console.log(`${current}/${all}: Already downloaded skipped: ${title}-submitted-${homework.gradeAttachmentName}`);
@@ -279,7 +287,7 @@ async function callback(semester, course, documents, cookies) {
                             await new Promise((resolve => {
                                 fileStream.on('finish', () => {
                                     current++;
-                                    console.log(`${current}/${all}: ${course.name}/${title}-graded-${homework.gradeAttachmentName} Downloaded`);
+                                    console.log(`${color.FgGreen}${current}/${all}: ${course.name}/${title}-graded-${homework.gradeAttachmentName} Downloade${color.Reset}`);
                                     resolve();
                                 });
                             }));
