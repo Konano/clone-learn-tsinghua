@@ -10,7 +10,7 @@ const htmlEntities = require('html-entities').AllHtmlEntities;
 const color = require('./color');
 
 const rootDir = 'D:/Seafile/SYNC/learn.tsinghua';
-const semester = '2019-2020-2';
+const semesterIds = ['2019-2020-2', '2019-2020-3', '2020-2021-1'];
 
 let helper = new thuLearnLib.Learn2018Helper();
 
@@ -149,7 +149,7 @@ function addHashTag(fileName, hash) {
     const semesters = await helper.getSemesterIdList();
 	// console.log(semesters);
     for (let semesterId of semesters) {
-        if (semesterId === semester) {
+        if (semesterIds.indexOf(semesterId) != -1) {
             let semester = {
                 id: semesterId,
                 startYear: Number(semesterId.slice(0, 4)),
