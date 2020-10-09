@@ -10,7 +10,7 @@ const htmlEntities = require('html-entities').AllHtmlEntities;
 const color = require('./color');
 
 const rootDir = 'D:/Seafile/SYNC/learn.tsinghua';
-const semesterIds = ['2019-2020-2', '2019-2020-3', '2020-2021-1'];
+const semesterIds = ['2020-2021-1'];
 
 let helper = new thuLearnLib.Learn2018Helper();
 
