@@ -2,7 +2,7 @@
 
 网络学堂文件、作业、公告同步工具
 
-Fork from 
+fork from https://github.com/jiegec/clone-learn-tsinghua
 
 # Usage
 
