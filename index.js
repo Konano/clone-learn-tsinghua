@@ -10,7 +10,7 @@ const htmlEntities = require('html-entities').AllHtmlEntities;
 const color = require('./color');
 
 const rootDir = 'D:/Seafile/SYNC/learn.tsinghua';
-const semesterIds = ['2020-2021-1'];
+const semesterIds = ['2020-2021-2'];
 
 let helper = new thuLearnLib.Learn2018Helper();
 
@@ -231,21 +231,21 @@ function addHashTag(fileName, hash) {
                         if (fs.existsSync(fileName)) {
                             current++;
                             console.log(`${current}/${all}: Already downloaded skipped: ${title}-${attachmentName}`);
-                            continue;
+                        } else {
+                            tasks.push((async () => {
+                                let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
+                                let result = await fetch(homework.attachmentUrl);
+                                let fileStream = fs.createWriteStream(fileName);
+                                result.body.pipe(fileStream);
+                                await new Promise((resolve => {
+                                    fileStream.on('finish', () => {
+                                        current++;
+                                        console.log(`${color.FgGreen}${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded${color.Reset}`);
+                                        resolve();
+                                    });
+                                }));
+                            })());
                         }
-                        tasks.push((async () => {
-                            let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
-                            let result = await fetch(homework.attachmentUrl);
-                            let fileStream = fs.createWriteStream(fileName);
-                            result.body.pipe(fileStream);
-                            await new Promise((resolve => {
-                                fileStream.on('finish', () => {
-                                    current++;
-                                    console.log(`${color.FgGreen}${current}/${all}: ${course.name}/${title}-${attachmentName} Downloaded${color.Reset}`);
-                                    resolve();
-                                });
-                            }));
-                        })());
                     }
                     if (homework.submitted && homework.submittedAttachmentUrl && homework.submittedAttachmentName) {
                         let attachmentName = cleanFileName(homework.submittedAttachmentName);
@@ -254,21 +254,21 @@ function addHashTag(fileName, hash) {
                         if (fs.existsSync(fileName)) {
                             current++;
                             console.log(`${current}/${all}: Already downloaded skipped: ${title}-submitted-${homework.submittedAttachmentName}`);
-                            continue;
+                        } else {
+                            tasks.push((async () => {
+                                let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
+                                let result = await fetch(homework.submittedAttachmentUrl);
+                                let fileStream = fs.createWriteStream(fileName);
+                                result.body.pipe(fileStream);
+                                await new Promise((resolve => {
+                                    fileStream.on('finish', () => {
+                                        current++;
+                                        console.log(`${color.FgGreen}${current}/${all}: ${course.name}/${title}-submitted-${homework.submittedAttachmentName} Downloaded${color.Reset}`);
+                                        resolve();
+                                    });
+                                }));
+                            })());
                         }
-                        tasks.push((async () => {
-                            let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
-                            let result = await fetch(homework.submittedAttachmentUrl);
-                            let fileStream = fs.createWriteStream(fileName);
-                            result.body.pipe(fileStream);
-                            await new Promise((resolve => {
-                                fileStream.on('finish', () => {
-                                    current++;
-                                    console.log(`${color.FgGreen}${current}/${all}: ${course.name}/${title}-submitted-${homework.submittedAttachmentName} Downloaded${color.Reset}`);
-                                    resolve();
-                                });
-                            }));
-                        })());
                     }
                     if (homework.submitted && homework.gradeAttachmentUrl && homework.gradeAttachmentName) {
                         let attachmentName = cleanFileName(homework.gradeAttachmentName);
@@ -277,21 +277,21 @@ function addHashTag(fileName, hash) {
                         if (fs.existsSync(fileName)) {
                             current++;
                             console.log(`${current}/${all}: Already downloaded skipped: ${title}-submitted-${homework.gradeAttachmentName}`);
-                            continue;
+                        } else {
+                            tasks.push((async () => {
+                                let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
+                                let result = await fetch(homework.gradeAttachmentUrl);
+                                let fileStream = fs.createWriteStream(fileName);
+                                result.body.pipe(fileStream);
+                                await new Promise((resolve => {
+                                    fileStream.on('finish', () => {
+                                        current++;
+                                        console.log(`${color.FgGreen}${current}/${all}: ${course.name}/${title}-graded-${homework.gradeAttachmentName} Downloade${color.Reset}`);
+                                        resolve();
+                                    });
+                                }));
+                            })());
                         }
-                        tasks.push((async () => {
-                            let fetch = new realIsomorphicFetch(crossFetch, helper.cookieJar);
-                            let result = await fetch(homework.gradeAttachmentUrl);
-                            let fileStream = fs.createWriteStream(fileName);
-                            result.body.pipe(fileStream);
-                            await new Promise((resolve => {
-                                fileStream.on('finish', () => {
-                                    current++;
-                                    console.log(`${color.FgGreen}${current}/${all}: ${course.name}/${title}-graded-${homework.gradeAttachmentName} Downloade${color.Reset}`);
-                                    resolve();
-                                });
-                            }));
-                        })());
                     }
                 }
             }
